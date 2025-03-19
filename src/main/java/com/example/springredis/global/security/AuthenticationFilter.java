@@ -1,6 +1,6 @@
-package com.example.springredis.security;
+package com.example.springredis.global.security;
 
-import com.example.springredis.auth.TokenService;
+import com.example.springredis.domain.auth.TokenService;
 
 import io.jsonwebtoken.Claims;
 
@@ -16,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -24,6 +25,7 @@ import java.util.Arrays;
 
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
+@Component
 @RequiredArgsConstructor
 public class AuthenticationFilter extends OncePerRequestFilter {
 
@@ -35,7 +37,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String token = extractToken(request);
         tokenService.validateToken(token);
-        Claims claims = tokenService.getClaims(token);
+        Claims claims = tokenService.extractClaims(token);
         Authentication authentication = createAuthentication(claims);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);
@@ -63,11 +65,13 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     private enum RequestPath {
 
-        MEMBER_LOGIN(HttpMethod.POST, "/api/auth/login", Authority.PERMIT_ALL),
-        MEMBER_LOGOUT(HttpMethod.POST, "/api/auth/logout", Authority.ROLE_MEMBER);
+        LOGIN(HttpMethod.POST, "/api/auth/login", Authority.PERMIT_ALL),
+        LOGOUT(HttpMethod.POST, "/api/auth/logout", Authority.ROLE_MEMBER),
+        TOKEN_REISSUE(HttpMethod.POST, "/api/auth/token/reissue", Authority.PERMIT_ALL),
+        MEMBER_PROFILE(HttpMethod.GET, "/api/members/me", Authority.ROLE_MEMBER);
 
         enum Authority {
-            PERMIT_ALL, ROLE_MEMBER
+            PERMIT_ALL, ROLE_MEMBER;
         }
 
         private final HttpMethod httpMethod;
@@ -80,7 +84,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             this.authority = authority;
         }
 
-        public static boolean isShouldNotFilter(HttpServletRequest request) {
+        private static boolean isShouldNotFilter(HttpServletRequest request) {
             return Arrays.stream(RequestPath.values())
                     .anyMatch(
                             (requestPath) -> requestPath.authority.equals(Authority.PERMIT_ALL) &&

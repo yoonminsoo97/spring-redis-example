@@ -1,6 +1,4 @@
-package com.example.springredis.auth.jwt;
-
-import com.example.springredis.error.ErrorType;
+package com.example.springredis.domain.auth.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -8,7 +6,6 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.stereotype.Component;
 
@@ -18,18 +15,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
-public class JwtManager {
+public class TokenManager {
 
     private final SecretKey secretKey;
     private final long accessTokenExpire;
     private final long refreshTokenExpire;
 
-    public JwtManager(@Value("${jwt.secret-key}") String secretKey,
-                      @Value("${jwt.access-token.expire}") long accessTokenExpire,
-                      @Value("${jwt.refresh-token.expire}") long refreshTokenExpire) {
-        this.secretKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-        this.accessTokenExpire = accessTokenExpire;
-        this.refreshTokenExpire = refreshTokenExpire;
+    public TokenManager(TokenProperties tokenProperties) {
+        this.secretKey = Keys.hmacShaKeyFor(tokenProperties.getSecretKey().getBytes(StandardCharsets.UTF_8));
+        this.accessTokenExpire = tokenProperties.getAccessTokenExpire();
+        this.refreshTokenExpire = tokenProperties.getRefreshTokenExpire();
     }
 
     public String createAccessToken(String username, String authority) {
@@ -44,34 +39,41 @@ public class JwtManager {
                 .compact();
     }
 
-    public String createRefreshToken() {
+    public String createRefreshToken(String username) {
         Date iat = new Date();
         Date exp = new Date(iat.getTime() + refreshTokenExpire);
         return Jwts.builder()
+                .claim("username", username)
                 .issuedAt(iat)
                 .expiration(exp)
                 .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
-    public Claims getClaims(String token) {
+    public Claims extractClaims(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
-                .parseSignedClaims(token).getPayload();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public void validateToken(String token) {
         try {
-            Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token);
+            Jwts.parser().verifyWith(secretKey).build().parse(token);
         } catch (ExpiredJwtException ex) {
-            throw new AuthenticationServiceException(ErrorType.EXPIRED_TOKEN.getErrorCode());
-        } catch (JwtException e) {
-            throw new AuthenticationServiceException(ErrorType.INVALID_TOKEN.getErrorCode());
+            throw new AuthenticationServiceException("expired token");
+        } catch (JwtException | IllegalArgumentException ex) {
+            throw new AuthenticationServiceException("invalid token");
         }
+    }
+
+    public long getAccessTokenExpire() {
+        return accessTokenExpire;
+    }
+
+    public long getRefreshTokenExpire() {
+        return refreshTokenExpire;
     }
 
 }

@@ -1,4 +1,4 @@
-package com.example.springredis.member;
+package com.example.springredis.domain.member;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -44,7 +44,7 @@ public class Member {
     }
 
     public String getAuthority() {
-        return role.authority();
+        return role.getAuthority();
     }
 
 }

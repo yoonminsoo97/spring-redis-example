@@ -1,4 +1,4 @@
-package com.example.springredis.auth;
+package com.example.springredis.domain.auth.dto;
 
 import lombok.Getter;
 

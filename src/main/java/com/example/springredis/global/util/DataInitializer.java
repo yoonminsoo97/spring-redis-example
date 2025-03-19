@@ -1,7 +1,7 @@
-package com.example.springredis.util;
+package com.example.springredis.global.util;
 
-import com.example.springredis.member.Member;
-import com.example.springredis.member.MemberRepository;
+import com.example.springredis.domain.member.Member;
+import com.example.springredis.domain.member.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 

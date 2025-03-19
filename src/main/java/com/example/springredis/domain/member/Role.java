@@ -1,5 +1,8 @@
-package com.example.springredis.member;
+package com.example.springredis.domain.member;
 
+import lombok.Getter;
+
+@Getter
 public enum Role {
 
     MEMBER("ROLE_MEMBER");
@@ -8,10 +11,6 @@ public enum Role {
 
     Role(String authority) {
         this.authority = authority;
-    }
-
-    public String authority() {
-        return authority;
     }
 
 }

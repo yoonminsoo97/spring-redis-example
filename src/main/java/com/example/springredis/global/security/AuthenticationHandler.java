@@ -1,20 +1,20 @@
-package com.example.springredis.security;
-
-import com.example.springredis.error.ErrorResponse;
-import com.example.springredis.error.ErrorType;
+package com.example.springredis.global.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-public class AuthenticationExceptionHandler implements AuthenticationEntryPoint {
+@Component
+public class AuthenticationHandler implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -22,12 +22,10 @@ public class AuthenticationExceptionHandler implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        String errorCode = authException.getMessage();
-        ErrorType errorType = ErrorType.of(errorCode);
-        ErrorResponse errorResponse = new ErrorResponse(errorType);
-        response.setStatus(errorType.getHttpStatus().value());
+        String message = authException.getMessage();
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper.writeValue(response.getOutputStream(), errorResponse);
+        objectMapper.writeValue(response.getOutputStream(), message);
     }
 
 }

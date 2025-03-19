@@ -1,4 +1,7 @@
-package com.example.springredis.auth;
+package com.example.springredis.domain.auth;
+
+import com.example.springredis.domain.auth.dto.LoginRequest;
+import com.example.springredis.domain.auth.dto.TokenResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -33,6 +36,14 @@ public class AuthController {
         String accessToken = extractToken(request);
         authService.logout(username, accessToken);
         return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("permitAll()")
+    @PostMapping("/token/reissue")
+    public ResponseEntity<TokenResponse> reIssueToken(HttpServletRequest request) {
+        String refreshToken = extractToken(request);
+        TokenResponse tokenResponse = authService.reIssueToken(refreshToken);
+        return ResponseEntity.ok().body(tokenResponse);
     }
 
     private String extractToken(HttpServletRequest request) {

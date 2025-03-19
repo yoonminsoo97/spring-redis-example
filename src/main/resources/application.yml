@@ -23,7 +23,5 @@ spring:
       host: localhost
 jwt:
   secret-key: hello-test-secret-key-test-world
-  access-token:
-    expire: 120000 # 10000(10sec) 120000(2min)
-  refresh-token:
-    expire: 600000 # 10min
+  access-token-expire: 10000 # 10000(10sec) 120000(2min)
+  refresh-token-expire: 600000 # 10min
